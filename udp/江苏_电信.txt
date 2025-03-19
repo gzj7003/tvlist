@@ -28,7 +28,7 @@ CCTV15,rtp://239.49.0.128:8000$江苏新cmc
 云南卫视,rtp://239.49.0.177:8000$江苏新cmc
 浙江卫视,rtp://239.49.8.20:9618$江苏新cmc
 重庆卫视,rtp://239.49.8.57:9830$江苏新cmc
-兵团卫视,https://liveout.btzx.com.cn/62ds9e/yil08g.m3u8$卫视
+兵团卫视,https://liveout.btzx.com.cn/62ds9e/yil08g.m3u8$江苏苏州地方
 苏州新闻综合,https://live-auth.51kandianshi.com/szgd/csztv1.m3u8$江苏苏州地方
 苏州社会经济,https://live-auth.51kandianshi.com/szgd/csztv2.m3u8$江苏苏州地方
 苏州文化生活,https://live-auth.51kandianshi.com/szgd/csztv3.m3u8$江苏苏州地方
