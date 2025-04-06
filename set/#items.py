@@ -127,6 +127,7 @@ for keyword in keywords:
                     for url in valid_ips:
                         new_data = data.replace("rtp://", f"{url}/rtp/")
                         new_file.write(new_data)
+
                 # 修改后代码
                 with open(txt_filename, 'w') as new_file:
                     # 保留原始内容
@@ -135,15 +136,15 @@ for keyword in keywords:
                         new_file.write(new_data)
                     # 新增定制内容
                     new_file.write("\n# 苏州新闻综合\n")
-                    new_file.write("苏州新闻综合,https://live-auth.51kandianshi.com/szgd/csztv1.m3u8)
+                    new_file.write("苏州新闻综合,https://live-auth.51kandianshi.com/szgd/csztv1.m3u8")
                     new_file.write("\n# 苏州社会经济\n")
-                    new_file.write("苏州社会经济,https://live-auth.51kandianshi.com/szgd/csztv2.m3u8)
+                    new_file.write("苏州社会经济,https://live-auth.51kandianshi.com/szgd/csztv2.m3u8")
                     new_file.write("\n# 苏州文化生活\n")
-                    new_file.write("苏州文化生活,https://live-auth.51kandianshi.com/szgd/csztv3.m3u8)
+                    new_file.write("苏州文化生活,https://live-auth.51kandianshi.com/szgd/csztv3.m3u8")
                     new_file.write("\n# 苏州生活资讯\n")
-                    new_file.write("苏州生活资讯,https://live-auth.51kandianshi.com/szgd/csztv5.m3u8)
+                    new_file.write("苏州生活资讯,https://live-auth.51kandianshi.com/szgd/csztv5.m3u8")
                     new_file.write("\n# 苏州4K\n")               
-                    new_file.write("苏州4K,https://live-auth.51kandianshi.com/szgd/csztv4k_hd.m3u8)
+                    new_file.write("苏州4K,https://live-auth.51kandianshi.com/szgd/csztv4k_hd.m3u8")
                                               
                 print(f'已生成播放列表，保存至 {txt_filename}')
 
