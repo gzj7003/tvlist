@@ -2,8 +2,8 @@ name: Auto Update Hotel IPTV
 
 on:
   workflow_dispatch:
-  schedule:
-    - cron: "15 6,12,18,22 * * *"
+#  schedule:
+#    - cron: "15 6,12,18,22 * * *"
 
 jobs:
   iptv:
