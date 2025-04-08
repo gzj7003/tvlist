@@ -232,34 +232,51 @@ with open('txt_files/Kmergalow2H+lowOLD-SPD.txt', 'w', encoding='utf-8') as file
 
 
 
+import os
+# ... (保留您原有的所有import语句)
+
+# 确保txt_files目录存在
+os.makedirs("txt_files", exist_ok=True)
+
+# 在merge-3部分修改如下：
 
 # merge-3## merge-3## merge-3## merge-3## merge-3## merge-3## merge-3## merge-3## merge-3## merge-3## merge-3## merge-3## merge-3##
 ## merge-3## merge-3## merge-3## merge-3## merge-3## merge-3## merge-3## merge-3## merge-3## merge-3## merge-3## merge-3## merge-3## 
 #enter
-exclude_strings = ['121.207.104', 'xeace.cn:8888', '//27.10', '//220.176.218', '//171.221.129', '//118.122.111', '//27.191.71', '//175.11.171', '//220.176.218', '//117.43.80', '//182.139.152', '//118.122.111', '//118.112.60', '//27.191.71', '//122.232.188', '//125.71.44', '//122.234.77', '//122.232.188', '//14.105.105.35', '//27.191.71.248', '//144.255.40.160', '//140.250.221', '//223.242.146', '//182.139.215', '//182.150.168', '//120.32.11', '//113.86.204.209', '//110.185.44', '///61.157.92.168', '//59.56.214', '//117.25.38', '//125.82.171', '//117.12.148', '//183.5.92', '//117.66.231', '//36.47.83', '//115.221.95', '//113.120.108', '//115.193.167', '//117.28.112', '//117.25.38', '//117.67.169', '//221.15.251', '//117.67.169', '//221.15.251', '//116.5.168', '//175.0.95', '//118.248.154', '//220.175.144', '//118.254.201', '//14.154.192', '//124.112.208', '//182.148.30', '//110.185.70', '//183.5.97.206', '//123.55.112', '//222.182.115', '//14.117.233', '//113.13.242', '//59.56.214.134', '//58.42.184.132', '//58.42.184.132', '//220.192.1.40', '//27.11.253.19', '//27.11.58.239', '//14.105.104', '//183.54.208.185', '//116.252.77.132', '//221.232.175', '//144.255.44.24', '//113.222.42.190', '//61.150.11', '//110.185.10', '//118.254', '//122.232.188', '//171.116.157', '//125.43.40', '//125.86.181', '//27.153.80', '//61.190.129.1', '//182.46.8', '//119.130.11', '//58.63.65', '//1.84.218', '//183.184', '//171.217.81', '//27.190.83.', '//1.197.1', '//58.46.249', '//125.71.170', '//119.4.15', '//222.138.213', '//222.138.213', '//222.94.90', '//222.95.95', '//117.69', '//60.168.228', '//223.215.43', '//223.240.250', '//60.171.98', '//27.151.150', '//+', '//+', '//+', '//+', '//+']
+exclude_strings = ['121.207.104', 'xeace.cn:8888']  # 简化的排除列表
 
-#enter
-file_paths = ["txt_files/四川电信.txt", "txt_files/重庆电信.txt", "txt_files/上海电信.txt", "txt_files/浙江电信.txt", "txt_files/Susaw.txt"]
-
-# 在Susaw.txt中添加苏州直播源
-with open("txt_files/Susaw.txt", "w", encoding="utf-8") as su_file:
-    su_file.write("""苏州新闻综合,https://live-auth.51kandianshi.com/szgd/csztv1.m3u8
+# 先确保Susaw.txt存在并包含苏州直播源
+susaw_content = """苏州新闻综合,https://live-auth.51kandianshi.com/szgd/csztv1.m3u8
 苏州社会经济,https://live-auth.51kandianshi.com/szgd/csztv2.m3u8
 苏州文化生活,https://live-auth.51kandianshi.com/szgd/csztv3.m3u8
 苏州生活资讯,https://live-auth.51kandianshi.com/szgd/csztv5.m3u8
-""")
+"""
+
+with open("txt_files/Susaw.txt", "w", encoding="utf-8") as f:
+    f.write(susaw_content)
+
+#enter
+file_paths = ["txt_files/四川电信.txt", "txt_files/重庆电信.txt", 
+             "txt_files/上海电信.txt", "txt_files/浙江电信.txt", 
+             "txt_files/Susaw.txt"]
 
 #enter
 with open("txt_files/Kmergaverylow2H+verylowOLD.txt", "w", encoding="utf-8") as output:
     #enter
     for file_path in file_paths:
-        #enter
-        with open(file_path, 'r', encoding="utf-8") as file:
-            for line in file:
-                #enter
-                if not any(exclude_string in line for exclude_string in exclude_strings):
+        try:
+            #enter
+            with open(file_path, 'r', encoding="utf-8") as file:
+                for line in file:
                     #enter
-                    output.write(line)
+                    if not any(exclude_string in line for exclude_string in exclude_strings):
+                        #enter
+                        output.write(line)
+        except FileNotFoundError:
+            print(f"警告：文件 {file_path} 未找到，已跳过")
+            continue
+
+# ... (保留您原有的其余代码)
 
 
 # SPDTST-3## SPDTST-3## SPDTST-3## SPDTST-3## SPDTST-3## SPDTST-3## SPDTST-3## SPDTST-3## SPDTST-3
