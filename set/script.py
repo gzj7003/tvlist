@@ -241,6 +241,14 @@ exclude_strings = ['121.207.104', 'xeace.cn:8888', '//27.10', '//220.176.218', '
 #enter
 file_paths = ["txt_files/四川电信.txt", "txt_files/重庆电信.txt", "txt_files/上海电信.txt", "txt_files/浙江电信.txt", "txt_files/Susaw.txt"]
 
+# 在Susaw.txt中添加苏州直播源
+with open("txt_files/Susaw.txt", "w", encoding="utf-8") as su_file:
+    su_file.write("""苏州新闻综合,https://live-auth.51kandianshi.com/szgd/csztv1.m3u8
+苏州社会经济,https://live-auth.51kandianshi.com/szgd/csztv2.m3u8
+苏州文化生活,https://live-auth.51kandianshi.com/szgd/csztv3.m3u8
+苏州生活资讯,https://live-auth.51kandianshi.com/szgd/csztv5.m3u8
+""")
+
 #enter
 with open("txt_files/Kmergaverylow2H+verylowOLD.txt", "w", encoding="utf-8") as output:
     #enter
