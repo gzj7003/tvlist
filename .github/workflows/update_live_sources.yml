@@ -3,7 +3,7 @@ name: Update Live Sources Daily
 on:
   schedule:
     # 每天 UTC 时间 13:00（北京时间 21:00）
-    - cron: '0 13 ,1* * *'
+    - cron: '0 13 * * *'
   workflow_dispatch:  # 允许手动触发
 
 jobs:
@@ -23,13 +23,50 @@ jobs:
         run: pip install requests
 
       - name: Run Python script to update live sources
-        run: python ${{ github.workspace }}/set/update_live_sources.py
-         
+        run: |
+          cat << 'EOF' > update_live_sources.py
+          import requests
+
+          def generate_live_source():
+              # 原始直播源地址
+              original_url = "https://raw.githubusercontent.com/gzj7003/tvlist/refs/heads/main/txt_files/Susaw.txt"
+              
+              # 苏州直播源内容
+              suzhou_sources = """苏州新闻综合,https://live-auth.51kandianshi.com/szgd/csztv1.m3u8$江苏苏州地方
+          苏州社会经济,https://live-auth.51kandianshi.com/szgd/csztv2.m3u8$江苏苏州地方
+          苏州文化生活,https://live-auth.51kandianshi.com/szgd/csztv3.m3u8$江苏苏州地方
+          苏州生活资讯,https://live-auth.51kandianshi.com/szgd/csztv5.m3u8$江苏苏州地方
+          苏州4K,https://live-auth.51kandianshi.com/szgd/csztv4k_hd.m3u8$江苏苏州地方"""
+
+              try:
+                  # 获取原始直播源内容
+                  response = requests.get(original_url)
+                  response.raise_for_status()  # 检查请求是否成功
+                  
+                  # 合并内容
+                  combined_content = response.text + "\n" + suzhou_sources
+                  
+                  # 写入到 txt_files/Susaw-sa.txt
+                  with open("txt_files/Susaw-sa.txt", "w", encoding="utf-8") as f:
+                      f.write(combined_content)
+                      
+                  print("直播源文件已成功生成：txt_files/Susaw-sa.txt")
+                  
+              except requests.exceptions.RequestException as e:
+                  print(f"获取原始直播源时出错: {e}")
+              except Exception as e:
+                  print(f"发生错误: {e}")
+
+          if __name__ == "__main__":
+              generate_live_source()
+          EOF
+
+          python update_live_sources.py
 
       - name: Commit and push changes
         run: |
           git config --global user.name "GitHub Actions"
           git config --global user.email "actions@github.com"
-          git add combined_live_sources.txt
+          git add txt_files/Susaw-sa.txt
           git commit -m "Auto-update live sources (daily)"
           git push
