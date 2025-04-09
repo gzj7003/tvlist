@@ -2,8 +2,8 @@ name: Update Live Sources Daily
 
 on:
   schedule:
-    # 每天 UTC 时间 13:00（北京时间 21:00）
-    - cron: '0 13 * * *'
+    # 每天 UTC 时间 21:00/1/5/9（北京时间 5:00/9/13/17）
+    - cron: '0 21 ,1,5,9* * *'
   workflow_dispatch:  # 允许手动触发
 
 jobs:
