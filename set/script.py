@@ -233,7 +233,9 @@ with open('txt_files/Kmergalow2H+lowOLD-SPD.txt', 'w', encoding='utf-8') as file
 
 
 import os
-# ... (保留您原有的所有import语句)
+from datetime import datetime
+
+# ... (保留您原有的其他import语句)
 
 # 确保txt_files目录存在
 os.makedirs("txt_files", exist_ok=True)
@@ -245,8 +247,13 @@ os.makedirs("txt_files", exist_ok=True)
 #enter
 exclude_strings = ['121.207.104', 'xeace.cn:8888']  # 简化的排除列表
 
-# 先确保Susaw.txt存在并包含苏州直播源
-susaw_content = """苏州新闻综合,https://live-auth.51kandianshi.com/szgd/csztv1.m3u8
+# 获取当前时间并格式化
+current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+# 苏州直播源内容，顶部添加更新时间
+susaw_content = f"""# 更新时间: {current_time}
+# 苏州本地频道
+苏州新闻综合,https://live-auth.51kandianshi.com/szgd/csztv1.m3u8
 苏州社会经济,https://live-auth.51kandianshi.com/szgd/csztv2.m3u8
 苏州文化生活,https://live-auth.51kandianshi.com/szgd/csztv3.m3u8
 苏州生活资讯,https://live-auth.51kandianshi.com/szgd/csztv5.m3u8
