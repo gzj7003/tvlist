@@ -79,8 +79,20 @@ jobs:
 
       - name: Commit and push changes
         run: |
+          # 删除临时生成的 Python 脚本
+          rm -f update_live_sources.py
+
+          # 配置 Git
           git config --global user.name "GitHub Actions"
           git config --global user.email "actions@github.com"
+    
+          # 仅添加目标文件
           git add txt_files/Susaw-sa.txt txt_files/Susaw-sa.m3u
+    
+          # 检查是否有需要提交的内容
+          if git diff-index --quiet HEAD --; then
+            echo "没有检测到文件变更，跳过提交"
+          else
           git commit -m "Auto-update live sources (daily)"
           git push
+          fi
