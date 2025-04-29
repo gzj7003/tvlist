@@ -42,14 +42,14 @@ jobs:
           pip install -r requirements.txt
 
       - name: Verify workspace path
-      run: |
-        echo "Workspace path: ${GITHUB_WORKSPACE}"
-        ls -lR "${GITHUB_WORKSPACE}/set"
+        run: |
+          echo "Workspace path: ${GITHUB_WORKSPACE}"
+          ls -lR "${GITHUB_WORKSPACE}/set"
 
       - name: Execute script
-      run: |
-        cd "${GITHUB_WORKSPACE}" || exit 1
-        python ./set/zjitems.py
+        run: |
+          cd "${GITHUB_WORKSPACE}" || exit 1
+          python ./set/zjitems.py
       
       - name: Commit and push changes
         env:
