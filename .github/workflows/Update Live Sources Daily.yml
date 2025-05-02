@@ -1,18 +1,21 @@
-
 name: Update Live Sources Daily
 
 on:
   schedule:
-      - cron: '03 4,21,8 * * *'
-  workflow_dispatch:  # 允许手动触发
+    - cron: '03 15,23,4,9 * * *'
+  workflow_dispatch:
 
 jobs:
   update-sources:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Set up Python
         uses: actions/setup-python@v4
@@ -26,50 +29,51 @@ jobs:
         run: |
           cat << 'EOF' > update_live_sources.py
           import requests
+          import os
 
           def generate_live_source():
-              # 合并两个原始直播源地址到同一个变量
               original_urls = [
                   "https://raw.githubusercontent.com/gzj7003/tvlist/refs/heads/main/txt_files/Susaw.txt",
                   "https://raw.githubusercontent.com/gzj7003/tvlist/refs/heads/main/txt_files/Susa.txt"
               ]
               
-              # 苏州直播源内容
               suzhou_sources = """苏州新闻综合,https://live-auth.51kandianshi.com/szgd/csztv1.m3u8$江苏苏州地方
-          苏州社会经济,https://live-auth.51kandianshi.com/szgd/csztv2.m3u8$江苏苏州地方
-          苏州文化生活,https://live-auth.51kandianshi.com/szgd/csztv3.m3u8$江苏苏州地方
-          苏州生活资讯,https://live-auth.51kandianshi.com/szgd/csztv5.m3u8$江苏苏州地方
-          苏州4K,https://live-auth.51kandianshi.com/szgd/csztv4k_hd.m3u8$江苏苏州地方"""
+                                  苏州社会经济,https://live-auth.51kandianshi.com/szgd/csztv2.m3u8$江苏苏州地方
+                                  苏州文化生活,https://live-auth.51kandianshi.com/szgd/csztv3.m3u8$江苏苏州地方
+                                  苏州生活资讯,https://live-auth.51kandianshi.com/szgd/csztv5.m3u8$江苏苏州地方
+                                  苏州4K,https://live-auth.51kandianshi.com/szgd/csztv4k_hd.m3u8$江苏苏州地方"""
 
               try:
-                  # 获取原始直播源内容
-                  response = requests.get(original_url)
-                  response.raise_for_status()  # 检查请求是否成功
+                  os.makedirs("txt_files", exist_ok=True)
                   
-                  # 合并内容
-                  combined_content = response.text + "\n" + suzhou_sources
+                  combined_content = ""
+                  for url in original_urls:
+                      response = requests.get(url)
+                      response.raise_for_status()
+                      combined_content += response.text + "\n"
                   
-                  # 写入到 txt_files/Susaw-sa.txt（原始格式）
+                  combined_content += suzhou_sources
+
                   with open("txt_files/Susaw-sa.txt", "w", encoding="utf-8") as f:
                       f.write(combined_content)
-                      
-                  # 转换为 M3U 格式并写入 txt_files/Susaw-sa.m3u
+
                   m3u_content = "#EXTM3U\n"
                   for line in combined_content.split("\n"):
-                      if line.strip():  # 跳过空行
-                          if "," in line:
-                              name, url = line.split(",", 1)
-                              m3u_content += f'#EXTINF:-1,{name}\n{url.split("$")[0]}\n'
-                  
+                      if line.strip() and "," in line:
+                          name, url_part = line.split(",", 1)
+                          m3u_content += f'#EXTINF:-1,{name}\n{url_part.split("$")[0]}\n'
+
                   with open("txt_files/Susaw-sa.m3u", "w", encoding="utf-8") as f:
                       f.write(m3u_content)
-                      
+
                   print("直播源文件已成功生成：txt_files/Susaw-sa.txt 和 txt_files/Susaw-sa.m3u")
                   
               except requests.exceptions.RequestException as e:
                   print(f"获取原始直播源时出错: {e}")
+                  exit(1)
               except Exception as e:
                   print(f"发生错误: {e}")
+                  exit(1)
 
           if __name__ == "__main__":
               generate_live_source()
@@ -79,20 +83,21 @@ jobs:
 
       - name: Commit and push changes
         run: |
-          # 删除临时生成的 Python 脚本
-          rm -f update_live_sources.py
-
-          # 配置 Git
           git config --global user.name "GitHub Actions"
           git config --global user.email "actions@github.com"
-    
-          # 仅添加目标文件
+          
+          if git diff --quiet --exit-code; then
+            echo "没有文件变更，无需提交"
+            exit 0
+          fi
+          
           git add txt_files/Susaw-sa.txt txt_files/Susaw-sa.m3u
-    
-          # 检查是否有需要提交的内容
-          if git diff-index --quiet HEAD --; then
-            echo "没有检测到文件变更，跳过提交"
-          else
           git commit -m "Auto-update live sources (daily)"
-          git push
+          
+          git pull --rebase origin main
+          git push origin main
+          
+          if [ $? -ne 0 ]; then
+            echo "常规推送失败，尝试使用--force-with-lease"
+            git push --force-with-lease origin main
           fi
