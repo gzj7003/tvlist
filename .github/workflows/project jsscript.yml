@@ -2,7 +2,7 @@ name: project jsscript
 
 on:
   schedule:
-  - cron: '03 ,23,4,8,22 * * *'  #6>10>14>18>22>2&&&
+  - cron: '03 ,23,4,8 * * *'  #6>10>14>18>22>2&&&
   workflow_dispatch:
     分支:
       - main
