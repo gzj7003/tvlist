@@ -102,7 +102,7 @@ EOF
           
           # 第二次尝试（如果第一次失败）
           echo "第二次执行..."
-          timeout 300 python ./ahitems.py || {
+          timeout 300 python ./set/ahitems.py || {
             echo "第二次执行失败"
           }
           
