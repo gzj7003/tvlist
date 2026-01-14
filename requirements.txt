@@ -6,3 +6,4 @@ eventlet==0.33.3
 opencv-python==4.9.0.80
 beautifulsoup4==4.12.3
 translate==3.6.1
+lxml>=4.9.3
