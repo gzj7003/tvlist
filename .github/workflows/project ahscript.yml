@@ -2,7 +2,7 @@ name: Project AHScript Automation
 
 on:
   schedule:
-    # 减少运行频率，避免被封IP（原为6次/天，现改为2次/天）
+    # 减少运行频率，避免被封IP
     - cron: '01 11,23 * * *'  # 北京时间 UTC+8 对应 19:01 和 07:01 点运行
   workflow_dispatch:
     inputs:
@@ -37,7 +37,10 @@ jobs:
       - name: Install system dependencies for OpenCV
         run: |
           sudo apt-get update
-          sudo apt-get install -y libgl1-mesa-glx libglib2.0-0
+          # Ubuntu 24.04 兼容的OpenCV依赖
+          sudo apt-get install -y libgl1 libglib2.0-0 libsm6 libxext6 libxrender-dev
+          # 安装ffmpeg用于视频处理（如果需要）
+          sudo apt-get install -y ffmpeg
 
       - name: Cache Python dependencies
         uses: actions/cache@v3
@@ -50,90 +53,139 @@ jobs:
       - name: Install Python dependencies
         run: |
           python -m pip install --upgrade pip
-          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-          pip install opencv-python-headless requests beautifulsoup4 lxml
-
-      - name: Verify workspace
-        run: |
-          echo "Workspace: ${GITHUB_WORKSPACE}"
-          ls -la
-          if [ -d "set" ]; then
-            echo "set directory exists"
-            ls -la set/
+          if [ -f requirements.txt ]; then 
+            pip install -r requirements.txt
           else
-            echo "set directory does not exist"
+            # 如果没有requirements.txt，安装基本依赖
+            pip install opencv-python-headless requests beautifulsoup4 lxml numpy
           fi
 
       - name: Create necessary directories
         run: |
           mkdir -p udpah txt_files
-          echo "测试文件" > udpah/test.txt
+          echo "创建目录结构完成"
+          echo "udpah 目录用于存放省份运营商配置文件"
+          echo "txt_files 目录用于存放生成的播放列表"
 
-      - name: Execute script with retry mechanism
-        # 添加重试机制，防止临时性失败
+      - name: Create sample config file for testing
+        run: |
+          # 创建一个测试配置文件（如果udpah目录为空）
+          if [ ! -f "udpah/安徽_电信.txt" ]; then
+            echo "创建测试配置文件..."
+            cat > udpah/安徽_电信.txt << EOF
+# 安徽电信测试配置
+rtp://239.253.43.1:5146 CCTV-1综合
+rtp://239.253.43.2:5146 CCTV-2财经
+rtp://239.253.43.3:5146 CCTV-3综艺
+rtp://239.253.43.4:5146 CCTV-4中文国际
+rtp://239.253.43.5:5146 CCTV-5体育
+EOF
+            echo "测试配置文件已创建"
+          fi
+
+      - name: Execute script with improved error handling
         continue-on-error: true
         run: |
           cd "${GITHUB_WORKSPACE}" || exit 1
           
-          # 第一次尝试
-          echo "第一次尝试运行脚本..."
-          python ./ahitems.py || echo "第一次运行失败，等待后重试..."
+          echo "=== 脚本执行开始 ==="
           
-          # 等待30秒后重试
-          sleep 30
+          # 设置Python路径
+          export PYTHONPATH="${GITHUB_WORKSPACE}:${PYTHONPATH}"
           
-          # 第二次尝试
-          echo "第二次尝试运行脚本..."
-          python ./ahitems.py || echo "第二次运行失败，继续..."
+          # 第一次尝试运行
+          echo "第一次执行..."
+          timeout 300 python ./ahitems.py || {
+            echo "第一次执行超时或失败，等待30秒..."
+            sleep 30
+          }
+          
+          # 第二次尝试（如果第一次失败）
+          echo "第二次执行..."
+          timeout 300 python ./ahitems.py || {
+            echo "第二次执行失败"
+          }
+          
+          echo "=== 脚本执行结束 ==="
 
-      - name: Check for output files
+      - name: Check script output
         run: |
+          echo "检查脚本输出..."
+          
+          # 检查是否有错误日志
+          if [ -f "error.log" ]; then
+            echo "发现错误日志："
+            cat error.log
+          fi
+          
+          # 检查生成的txt_files目录
           if [ -d "txt_files" ]; then
-            echo "生成的txt_files目录内容:"
+            echo "txt_files 目录内容："
             ls -la txt_files/
             echo ""
-            echo "文件数量: $(ls txt_files/*.txt 2>/dev/null | wc -l)"
+            echo "文件列表："
+            for file in txt_files/*.txt 2>/dev/null; do
+              echo "文件: $(basename $file) - 大小: $(wc -l < "$file" | tr -d ' ') 行"
+            done
           else
-            echo "txt_files目录不存在"
+            echo "警告: txt_files 目录未创建"
           fi
 
-      - name: Commit and push changes if any
-        if: success()
+      - name: Commit and push changes
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           git config --global user.name "GitHub Actions"
           git config --global user.email "actions@github.com"
           
-          # 检查是否有变化
-          git status
+          echo "当前状态："
+          git status --porcelain
           
           # 添加所有变化
           git add .
           
           # 检查是否有需要提交的内容
-          if git diff-index --quiet HEAD --; then
-            echo "没有变化需要提交"
-          else
+          if ! git diff-index --quiet HEAD --; then
             # 生成提交信息
-            COMMIT_MSG="Auto-update: $(date +'%Y-%m-%d %H:%M:%S')"
+            COMMIT_DATE=$(date +'%Y-%m-%d %H:%M:%S')
+            COMMIT_MSG="Auto-update: ${COMMIT_DATE}"
             
-            # 如果有txt文件生成，统计数量
-            if [ -d "txt_files" ]; then
-              TXT_COUNT=$(ls txt_files/*.txt 2>/dev/null | wc -l)
-              if [ $TXT_COUNT -gt 0 ]; then
-                COMMIT_MSG="$COMMIT_MSG - 生成 $TXT_COUNT 个播放列表"
-              fi
+            # 如果有txt文件生成，添加到提交信息
+            TXT_FILES=$(find txt_files -name "*.txt" 2>/dev/null | wc -l)
+            if [ $TXT_FILES -gt 0 ]; then
+              COMMIT_MSG="${COMMIT_MSG} - 生成 ${TXT_FILES} 个播放列表"
             fi
             
-            git commit -m "$COMMIT_MSG"
+            echo "提交信息: ${COMMIT_MSG}"
+            git commit -m "${COMMIT_MSG}"
             git push origin HEAD:main
-            echo "已提交并推送更改"
+            echo "✅ 已提交并推送更改"
+          else
+            echo "ℹ️ 没有变化需要提交"
           fi
 
-      - name: Send notification on failure
-        if: failure()
-        uses: actions/github-script@v6
-        with:
-          script: |
-            console.log('Workflow failed! Please check the logs.');
+      - name: Create workflow summary
+        if: always()
+        run: |
+          echo "## GitHub Actions 执行结果" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**执行时间**: $(date '+%Y-%m-%d %H:%M:%S')" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          if [ -d "txt_files" ]; then
+            TXT_COUNT=$(ls txt_files/*.txt 2>/dev/null | wc -l)
+            if [ $TXT_COUNT -gt 0 ]; then
+              echo "✅ **生成成功**: ${TXT_COUNT} 个播放列表文件" >> $GITHUB_STEP_SUMMARY
+              echo "" >> $GITHUB_STEP_SUMMARY
+              echo "**生成的文件**: " >> $GITHUB_STEP_SUMMARY
+              for file in txt_files/*.txt; do
+                if [ -f "$file" ]; then
+                  echo "- $(basename $file)" >> $GITHUB_STEP_SUMMARY
+                fi
+              done
+            else
+              echo "⚠️ **未生成文件**: txt_files 目录为空" >> $GITHUB_STEP_SUMMARY
+            fi
+          else
+            echo "❌ **执行失败**: 未创建输出目录" >> $GITHUB_STEP_SUMMARY
+          fi
