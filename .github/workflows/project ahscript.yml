@@ -2,7 +2,8 @@ name: Project AHScript Automation
 
 on:
   schedule:
-    - cron: '01 3,7,11,15,19,23 * * *'  # 北京时间 UTC+8 对应 11,15,19,23,3*,7* 点运行
+    # 减少运行频率，避免被封IP（原为6次/天，现改为2次/天）
+    - cron: '01 11,23 * * *'  # 北京时间 UTC+8 对应 19:01 和 07:01 点运行
   workflow_dispatch:
     inputs:
       branch:
@@ -11,22 +12,32 @@ on:
         default: 'main'
 
 permissions:
-  contents: write  # 最小权限原则
+  contents: write
 
 jobs:
   build:
     runs-on: ubuntu-latest
-
+    
+    # 设置环境变量（如果需要使用FOFA API）
+    env:
+      FOFA_EMAIL: ${{ secrets.FOFA_EMAIL }}
+      FOFA_TOKEN: ${{ secrets.FOFA_TOKEN }}
+    
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # 获取完整提交历史
+          fetch-depth: 0
 
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.10'  # 明确指定 Python 版本
+          python-version: '3.10'
+
+      - name: Install system dependencies for OpenCV
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgl1-mesa-glx libglib2.0-0
 
       - name: Cache Python dependencies
         uses: actions/cache@v3
@@ -36,34 +47,93 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-pip-
 
-      - name: Install dependencies
+      - name: Install Python dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+          pip install opencv-python-headless requests beautifulsoup4 lxml
 
-      - name: Verify workspace path
+      - name: Verify workspace
         run: |
-          echo "Workspace path: ${GITHUB_WORKSPACE}"
-          ls -lR "${GITHUB_WORKSPACE}/set"
+          echo "Workspace: ${GITHUB_WORKSPACE}"
+          ls -la
+          if [ -d "set" ]; then
+            echo "set directory exists"
+            ls -la set/
+          else
+            echo "set directory does not exist"
+          fi
 
-      - name: Execute script
+      - name: Create necessary directories
+        run: |
+          mkdir -p udpah txt_files
+          echo "测试文件" > udpah/test.txt
+
+      - name: Execute script with retry mechanism
+        # 添加重试机制，防止临时性失败
+        continue-on-error: true
         run: |
           cd "${GITHUB_WORKSPACE}" || exit 1
-          python ./set/ahitems.py
-      
-      - name: Commit and push changes
+          
+          # 第一次尝试
+          echo "第一次尝试运行脚本..."
+          python ./ahitems.py || echo "第一次运行失败，等待后重试..."
+          
+          # 等待30秒后重试
+          sleep 30
+          
+          # 第二次尝试
+          echo "第二次尝试运行脚本..."
+          python ./ahitems.py || echo "第二次运行失败，继续..."
+
+      - name: Check for output files
+        run: |
+          if [ -d "txt_files" ]; then
+            echo "生成的txt_files目录内容:"
+            ls -la txt_files/
+            echo ""
+            echo "文件数量: $(ls txt_files/*.txt 2>/dev/null | wc -l)"
+          else
+            echo "txt_files目录不存在"
+          fi
+
+      - name: Commit and push changes if any
+        if: success()
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           git config --global user.name "GitHub Actions"
           git config --global user.email "actions@github.com"
           
-          # 检测变更并提交
+          # 检查是否有变化
+          git status
+          
+          # 添加所有变化
           git add .
-          if ! git diff-index --quiet HEAD --; then
-            git commit -m "Auto-update: $(date +'%Y-%m-%d %H:%M:%S')"
-            git push origin HEAD:main
-            echo "Changes pushed successfully."
+          
+          # 检查是否有需要提交的内容
+          if git diff-index --quiet HEAD --; then
+            echo "没有变化需要提交"
           else
-            echo "No changes to commit."
+            # 生成提交信息
+            COMMIT_MSG="Auto-update: $(date +'%Y-%m-%d %H:%M:%S')"
+            
+            # 如果有txt文件生成，统计数量
+            if [ -d "txt_files" ]; then
+              TXT_COUNT=$(ls txt_files/*.txt 2>/dev/null | wc -l)
+              if [ $TXT_COUNT -gt 0 ]; then
+                COMMIT_MSG="$COMMIT_MSG - 生成 $TXT_COUNT 个播放列表"
+              fi
+            fi
+            
+            git commit -m "$COMMIT_MSG"
+            git push origin HEAD:main
+            echo "已提交并推送更改"
           fi
+
+      - name: Send notification on failure
+        if: failure()
+        uses: actions/github-script@v6
+        with:
+          script: |
+            console.log('Workflow failed! Please check the logs.');
