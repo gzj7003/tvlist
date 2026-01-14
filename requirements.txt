@@ -1,12 +1,18 @@
 # 核心依赖
+selenium>=4.0.0
 requests>=2.31.0
 beautifulsoup4>=4.12.2
 opencv-python-headless>=4.8.1
 lxml>=4.9.3
 numpy>=1.24.3
-python-dotenv>=1.0.0
+googletrans==3.1.0a0  # 或使用 translate>=3.6.1，但更推荐 googletrans
+webdriver-manager>=3.0.0  # 配合 selenium 自动管理浏览器驱动
 
-# 可选优化
-fake-useragent>=1.4.0
-tenacity>=8.2.0
+# 异步和网络依赖（替代 futures 和 eventlet）
 aiohttp>=3.9.0
+asyncio  # Python 内置，仅作为提醒
+concurrent.futures  # Python 内置，无需安装
+
+# 可选依赖（用于更好的调试）
+python-dotenv>=1.0.0
+pytest>=7.4.0  # 测试框架
