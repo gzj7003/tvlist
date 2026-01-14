@@ -1,18 +1,13 @@
-numpy==1.26.4
-selenium>=4.0.0
-requests>=2.31.0
-futures==3.1.1
-eventlet==0.33.3
-opencv-python==4.9.0.80
-beautifulsoup4==4.12.3
-translate==3.6.1
-lxml>=4.9.3
 # 核心依赖
+selenium>=4.0.0
 requests>=2.31.0
 beautifulsoup4>=4.12.2
 opencv-python-headless>=4.8.1
 lxml>=4.9.3
 numpy>=1.24.3
+translate==3.6.1
+futures==3.1.1
+eventlet==0.33.3
 
 # 可选依赖（用于更好的调试）
 python-dotenv>=1.0.0
