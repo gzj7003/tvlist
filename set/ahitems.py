@@ -29,7 +29,7 @@ keywords = []
 for province_isp in provinces_isps:
 
     try:
-        with open(f'udpzj/{province_isp}.txt', 'r', encoding='utf-8') as file:
+        with open(f'udpah/{province_isp}.txt', 'r', encoding='utf-8') as file:
             lines = file.readlines()
             lines = [line.strip() for line in lines if line.strip()]
 
@@ -118,7 +118,7 @@ for keyword in keywords:
                     
             if valid_ips:
 
-                rtp_filename = f'udpzj/{province}_{isp}.txt'
+                rtp_filename = f'udpah/{province}_{isp}.txt'
                 with open(rtp_filename, 'r', encoding='utf-8') as file:
                     data = file.read()
                 txt_filename = f'txt_files/{province}{isp}.txt'
