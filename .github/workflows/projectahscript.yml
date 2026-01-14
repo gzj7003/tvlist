@@ -2,7 +2,7 @@ name: Project AHScript Automation
 
 on:
   schedule:
-    - cron: '01 3,7,11,15,19 * * *'  # 北京时间 UTC+8 对应 11,15,19,23,3* 点运行
+    - cron: '01 3,7,11,15,19 * * *'  
   workflow_dispatch:
     inputs:
       branch:
