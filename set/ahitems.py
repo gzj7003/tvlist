@@ -29,7 +29,7 @@ keywords = []
 for province_isp in provinces_isps:
 
     try:
-        with open(f'udpah/{province_isp}.txt', 'r', encoding='utf-8') as file:
+        with open(f'udpzj/{province_isp}.txt', 'r', encoding='utf-8') as file:
             lines = file.readlines()
             lines = [line.strip() for line in lines if line.strip()]
 
@@ -118,14 +118,35 @@ for keyword in keywords:
                     
             if valid_ips:
 
-                rtp_filename = f'udpah/{province}_{isp}.txt'
+                rtp_filename = f'udpzj/{province}_{isp}.txt'
                 with open(rtp_filename, 'r', encoding='utf-8') as file:
                     data = file.read()
                 txt_filename = f'txt_files/{province}{isp}.txt'
+                # 原始代码
                 with open(txt_filename, 'w') as new_file:
                     for url in valid_ips:
                         new_data = data.replace("rtp://", f"{url}/rtp/")
                         new_file.write(new_data)
+
+                # 修改后代码
+                with open(txt_filename, 'w') as new_file:
+                    # 保留原始内容
+                    for url in valid_ips:
+                        new_data = data.replace("rtp://", f"{url}/rtp/")
+                        new_file.write(new_data)
+                    # 新增定制内容
+                    new_file.write("\n# 浙江卫视\n")
+                    new_file.write("浙江卫视,http://ali-m-l.cztv.com/channels/lantian/channel001/1080p.m3u8")                   
+                    new_file.write("\n# 苏州新闻综合\n")
+                    new_file.write("苏州新闻综合,https://live-auth.51kandianshi.com/szgd/csztv1.m3u8")
+                    new_file.write("\n# 苏州社会经济\n")
+                    new_file.write("苏州社会经济,https://live-auth.51kandianshi.com/szgd/csztv2.m3u8")
+                    new_file.write("\n# 苏州文化生活\n")
+                    new_file.write("苏州文化生活,https://live-auth.51kandianshi.com/szgd/csztv3.m3u8")
+                    new_file.write("\n# 苏州生活资讯\n")
+                    new_file.write("苏州生活资讯,https://live-auth.51kandianshi.com/szgd/csztv5.m3u8")
+                    new_file.write("\n# 苏州4K\n")               
+                    new_file.write("苏州4K,https://live-auth.51kandianshi.com/szgd/csztv4k_hd.m3u8")
                        
                 print(f'已生成播放列表，保存至 {txt_filename}')
 
