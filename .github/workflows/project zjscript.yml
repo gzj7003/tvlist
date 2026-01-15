@@ -2,7 +2,7 @@ name: Project ZJScript Automation
 
 on:
   schedule:
-    - cron: '01 2,10,18,22 * * *'  # 北京时间 UTC+8 对应 10,18,2*,6* 点运行
+    - cron: '02 20,2,6,10 * * *'  #6>10>14>18>22>2&&&
   workflow_dispatch:
     inputs:
       branch:
