@@ -46,7 +46,7 @@ jobs:
       - name: Execute script
         run: |
           cd "${GITHUB_WORKSPACE}" || exit 1
-          python ./set/ahitems.py
+          python ./ahitems.py
       
       - name: Commit and push changes
         env:
