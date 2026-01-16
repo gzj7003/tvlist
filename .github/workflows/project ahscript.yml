@@ -2,7 +2,7 @@ name: Project AHScript Automation
 
 on:
   schedule:
-    - cron: '02 21,9 * * *'  #6>10>14>18>22>2&&&
+    - cron: '02 21,9 * * *'  
   workflow_dispatch:
     inputs:
       branch:
