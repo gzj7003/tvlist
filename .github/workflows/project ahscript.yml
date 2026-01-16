@@ -95,7 +95,7 @@ EOF
           
           # 第一次尝试运行
           echo "第一次执行..."
-          timeout 300 python ./ahitems.py || {
+          timeout 300 python ./set/ahitems.py || {
             echo "第一次执行超时或失败，等待30秒..."
             sleep 30
           }
